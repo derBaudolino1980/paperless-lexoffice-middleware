@@ -1,0 +1,49 @@
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+COPY package.json ./
+RUN npm install
+
+COPY . .
+RUN npm run build
+
+FROM nginx:stable-alpine
+
+COPY --from=build /app/dist /usr/share/nginx/html
+
+RUN cat > /etc/nginx/conf.d/default.conf << 'NGINX_CONF'
+server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://backend:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 300;
+        proxy_connect_timeout 300;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript image/svg+xml;
+    gzip_min_length 256;
+}
+NGINX_CONF
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
