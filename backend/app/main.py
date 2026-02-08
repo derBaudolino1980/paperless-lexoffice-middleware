@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import func, select, text
 
-from app.api import connectors, logs, mappings, webhooks, workflows
+from app.api import connections, connectors, logs, mappings, webhooks, workflows
 from app.config import get_settings
 from app.database import Base, SessionDep, get_session_factory, reset_session_factory
 from app.models.log import WorkflowLog
@@ -25,6 +25,16 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
     logging.basicConfig(level=settings.LOG_LEVEL)
     logger.info("Starting %s v%s", settings.APP_TITLE, settings.APP_VERSION)
+
+    # Create all tables on startup (replaces Alembic for now)
+    from app.database import _build_engine
+    from app.models import connector, log, mapping, workflow  # noqa: F401 – register models
+
+    engine = _build_engine(settings)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    await engine.dispose()
+    logger.info("Database tables created/verified")
 
     # Ensure session factory is initialized
     get_session_factory()
@@ -58,6 +68,7 @@ def create_app() -> FastAPI:
     # Include routers
     app.include_router(workflows.router)
     app.include_router(connectors.router)
+    app.include_router(connections.router)
     app.include_router(webhooks.router)
     app.include_router(mappings.router)
     app.include_router(logs.router)

@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   # ── PostgreSQL ─────────────────────────────────────────────
   db:
@@ -45,7 +43,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      target: production
     restart: unless-stopped
     ports:
       - "${BACKEND_PORT:-8000}:8000"
@@ -73,10 +70,9 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      target: production
     restart: unless-stopped
     ports:
-      - "${FRONTEND_PORT:-3000}:3000"
+      - "${FRONTEND_PORT:-3000}:80"
     depends_on:
       backend:
         condition: service_healthy

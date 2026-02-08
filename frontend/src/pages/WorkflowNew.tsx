@@ -11,8 +11,8 @@ export default function WorkflowNew() {
     mutationFn: (data: {
       name: string;
       description: string;
-      trigger: { source: string; event_type: string; conditions: Record<string, string> };
-      actions: { target: string; action_type: string; parameters: Record<string, string>; order: number }[];
+      triggers: { source: string; event_type: string; conditions: Record<string, string>; sort_order: number }[];
+      actions: { target: string; action_type: string; parameters: Record<string, string>; sort_order: number }[];
     }) => api.post('/workflows', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workflows'] });
@@ -34,12 +34,19 @@ export default function WorkflowNew() {
           createMutation.mutate({
             name: data.name,
             description: data.description,
-            trigger: data.trigger,
-            actions: data.actions.map((a) => ({
+            triggers: [
+              {
+                source: data.trigger.source,
+                event_type: data.trigger.event_type,
+                conditions: data.trigger.conditions,
+                sort_order: 0,
+              },
+            ],
+            actions: data.actions.map((a, idx) => ({
               target: a.target,
               action_type: a.action_type,
               parameters: a.parameters,
-              order: a.order,
+              sort_order: idx,
             })),
           });
         }}

@@ -9,107 +9,21 @@ import {
   ChevronUp,
   Filter,
   Calendar,
-  Clock,
   Search,
   RefreshCw,
 } from 'lucide-react';
 import { api } from '../api/client';
-import type { WorkflowExecution } from '../api/client';
-
-const mockLogs: WorkflowExecution[] = [
-  {
-    id: 'ex1',
-    workflow_id: 'wf1',
-    workflow_name: 'Rechnungen zu Lexoffice',
-    status: 'success',
-    started_at: new Date(Date.now() - 5 * 60000).toISOString(),
-    finished_at: new Date(Date.now() - 4.8 * 60000).toISOString(),
-    duration_ms: 1230,
-    input_data: { document_id: 42, title: 'Rechnung 2024-001', tags: ['Rechnung', 'Firma ABC'] },
-    output_data: { voucher_id: 'lx-v-001', status: 'created' },
-  },
-  {
-    id: 'ex2',
-    workflow_id: 'wf2',
-    workflow_name: 'Belege archivieren',
-    status: 'success',
-    started_at: new Date(Date.now() - 15 * 60000).toISOString(),
-    finished_at: new Date(Date.now() - 14.5 * 60000).toISOString(),
-    duration_ms: 890,
-    input_data: { voucher_id: 'lx-v-002', type: 'purchaseinvoice' },
-    output_data: { document_id: 43, tags_added: ['Lexoffice-Import'] },
-  },
-  {
-    id: 'ex3',
-    workflow_id: 'wf3',
-    workflow_name: 'Kontakte synchronisieren',
-    status: 'error',
-    started_at: new Date(Date.now() - 30 * 60000).toISOString(),
-    finished_at: new Date(Date.now() - 29.8 * 60000).toISOString(),
-    duration_ms: 4520,
-    input_data: { correspondent_id: 12, name: 'Muster GmbH' },
-    error_message: 'Lexoffice API: Rate limit erreicht (429 Too Many Requests)',
-  },
-  {
-    id: 'ex4',
-    workflow_id: 'wf1',
-    workflow_name: 'Rechnungen zu Lexoffice',
-    status: 'success',
-    started_at: new Date(Date.now() - 60 * 60000).toISOString(),
-    finished_at: new Date(Date.now() - 59.5 * 60000).toISOString(),
-    duration_ms: 1100,
-    input_data: { document_id: 41, title: 'Rechnung 2024-002', tags: ['Rechnung'] },
-    output_data: { voucher_id: 'lx-v-003', status: 'created' },
-  },
-  {
-    id: 'ex5',
-    workflow_id: 'wf4',
-    workflow_name: 'Dokumenttyp-Erkennung',
-    status: 'skipped',
-    started_at: new Date(Date.now() - 90 * 60000).toISOString(),
-    finished_at: new Date(Date.now() - 90 * 60000).toISOString(),
-    duration_ms: 45,
-    input_data: { document_id: 40, title: 'Scan_2024_03.pdf' },
-    output_data: { reason: 'Dokumenttyp bereits zugewiesen' },
-  },
-  {
-    id: 'ex6',
-    workflow_id: 'wf1',
-    workflow_name: 'Rechnungen zu Lexoffice',
-    status: 'success',
-    started_at: new Date(Date.now() - 120 * 60000).toISOString(),
-    finished_at: new Date(Date.now() - 119.8 * 60000).toISOString(),
-    duration_ms: 980,
-    input_data: { document_id: 39, title: 'Rechnung RE-2024-100' },
-    output_data: { voucher_id: 'lx-v-004', status: 'created' },
-  },
-  {
-    id: 'ex7',
-    workflow_id: 'wf2',
-    workflow_name: 'Belege archivieren',
-    status: 'error',
-    started_at: new Date(Date.now() - 180 * 60000).toISOString(),
-    finished_at: new Date(Date.now() - 179.5 * 60000).toISOString(),
-    duration_ms: 15200,
-    input_data: { voucher_id: 'lx-v-005', type: 'salesinvoice' },
-    error_message: 'Paperless API: Datei-Upload fehlgeschlagen (413 Payload Too Large)',
-  },
-  {
-    id: 'ex8',
-    workflow_id: 'wf4',
-    workflow_name: 'Dokumenttyp-Erkennung',
-    status: 'success',
-    started_at: new Date(Date.now() - 240 * 60000).toISOString(),
-    finished_at: new Date(Date.now() - 239.8 * 60000).toISOString(),
-    duration_ms: 2340,
-    input_data: { document_id: 38, title: 'Vertrag_Muster.pdf' },
-    output_data: { detected_type: 'Vertrag', confidence: 0.94 },
-  },
-];
+import type { WorkflowLog, PaginatedResponse } from '../api/client';
 
 type StatusFilterType = 'all' | 'success' | 'error' | 'skipped';
 
-const statusConfig = {
+const statusConfig: Record<string, {
+  label: string;
+  icon: typeof CheckCircle2;
+  rowClass: string;
+  iconClass: string;
+  badgeClass: string;
+}> = {
   success: {
     label: 'Erfolgreich',
     icon: CheckCircle2,
@@ -151,12 +65,6 @@ function formatTimestamp(ts: string): string {
   });
 }
 
-function formatDuration(ms: number): string {
-  if (ms < 1000) return `${ms}ms`;
-  if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
-  return `${Math.floor(ms / 60000)}m ${Math.round((ms % 60000) / 1000)}s`;
-}
-
 function formatJson(data: unknown): string {
   return JSON.stringify(data, null, 2);
 }
@@ -164,41 +72,33 @@ function formatJson(data: unknown): string {
 export default function Logs() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilterType>('all');
-  const [workflowFilter, setWorkflowFilter] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: logs, refetch, isFetching } = useQuery<WorkflowExecution[]>({
-    queryKey: ['executions'],
-    queryFn: () => api.get('/executions'),
-    placeholderData: mockLogs,
+  const { data: response, refetch, isFetching } = useQuery<PaginatedResponse<WorkflowLog>>({
+    queryKey: ['logs'],
+    queryFn: () => api.get('/logs', { page_size: 50 }),
   });
 
-  const displayLogs = logs || mockLogs;
-
-  const workflowNames = useMemo(() => {
-    const names = new Set(displayLogs.map((l) => l.workflow_name));
-    return Array.from(names).sort();
-  }, [displayLogs]);
+  const logs = response?.items || [];
 
   const filtered = useMemo(() => {
-    return displayLogs.filter((log) => {
+    return logs.filter((log) => {
       if (statusFilter !== 'all' && log.status !== statusFilter) return false;
-      if (workflowFilter && log.workflow_name !== workflowFilter) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         return (
-          log.workflow_name.toLowerCase().includes(q) ||
+          log.workflow_id.toLowerCase().includes(q) ||
           (log.error_message && log.error_message.toLowerCase().includes(q)) ||
           log.id.toLowerCase().includes(q)
         );
       }
       return true;
     });
-  }, [displayLogs, statusFilter, workflowFilter, searchQuery]);
+  }, [logs, statusFilter, searchQuery]);
 
-  const successCount = displayLogs.filter((l) => l.status === 'success').length;
-  const errorCount = displayLogs.filter((l) => l.status === 'error').length;
-  const skippedCount = displayLogs.filter((l) => l.status === 'skipped').length;
+  const successCount = logs.filter((l) => l.status === 'success').length;
+  const errorCount = logs.filter((l) => l.status === 'error').length;
+  const skippedCount = logs.filter((l) => l.status === 'skipped').length;
 
   return (
     <div className="space-y-6">
@@ -257,17 +157,6 @@ export default function Logs() {
 
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-gray-400" />
-          <select
-            className="input-field w-auto"
-            value={workflowFilter}
-            onChange={(e) => setWorkflowFilter(e.target.value)}
-          >
-            <option value="">Alle Workflows</option>
-            {workflowNames.map((name) => (
-              <option key={name} value={name}>{name}</option>
-            ))}
-          </select>
-
           <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1">
             {([
               ['all', 'Alle'],
@@ -308,12 +197,6 @@ export default function Logs() {
                     Zeitpunkt
                   </div>
                 </th>
-                <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" />
-                    Dauer
-                  </div>
-                </th>
                 <th className="px-5 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
                   Details
                 </th>
@@ -322,7 +205,7 @@ export default function Logs() {
             <tbody className="divide-y divide-gray-50">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-5 py-12 text-center">
+                  <td colSpan={4} className="px-5 py-12 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <Search className="h-8 w-8 text-gray-300" />
                       <p className="text-sm font-medium text-gray-500">Keine Protokolleintr\u00e4ge gefunden</p>
@@ -332,13 +215,13 @@ export default function Logs() {
                 </tr>
               ) : (
                 filtered.map((log) => {
-                  const config = statusConfig[log.status];
+                  const config = statusConfig[log.status] || statusConfig.running;
                   const StatusIcon = config.icon;
                   const isExpanded = expandedId === log.id;
 
                   return (
                     <tr key={log.id} className="group">
-                      <td colSpan={5} className="p-0">
+                      <td colSpan={4} className="p-0">
                         <div
                           className={`flex cursor-pointer items-center px-5 py-3.5 transition-colors ${config.rowClass}`}
                           onClick={() => setExpandedId(isExpanded ? null : log.id)}
@@ -349,18 +232,16 @@ export default function Logs() {
                           </div>
 
                           <div className="flex-1 px-5">
-                            <p className="text-sm font-medium text-gray-900">{log.workflow_name}</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              Workflow {log.workflow_id.slice(0, 8)}...
+                            </p>
                             {log.error_message && (
                               <p className="mt-0.5 truncate text-xs text-red-500">{log.error_message}</p>
                             )}
                           </div>
 
                           <div className="w-[180px] px-5 text-sm text-gray-500">
-                            {formatTimestamp(log.started_at)}
-                          </div>
-
-                          <div className="w-[80px] px-5 text-sm text-gray-500">
-                            {log.duration_ms !== undefined ? formatDuration(log.duration_ms) : '-'}
+                            {formatTimestamp(log.executed_at)}
                           </div>
 
                           <div className="w-[60px] text-right">
@@ -409,9 +290,6 @@ export default function Logs() {
                             <div className="mt-3 flex items-center gap-4 text-xs text-gray-400">
                               <span>ID: {log.id}</span>
                               <span>Workflow-ID: {log.workflow_id}</span>
-                              {log.finished_at && (
-                                <span>Beendet: {formatTimestamp(log.finished_at)}</span>
-                              )}
                             </div>
                           </div>
                         )}

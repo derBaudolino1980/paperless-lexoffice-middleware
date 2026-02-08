@@ -38,10 +38,15 @@ const sourceLabels: Record<string, string> = {
 
 function generateWorkflowMermaid(workflow: Workflow): string {
   const lines = ['graph LR'];
-  const source = workflow.trigger.source;
-  const event = workflow.trigger.event_type;
+  const trigger = workflow.triggers[0];
 
-  lines.push(`  T[("${sourceLabels[source]}\\n${event}")] --> |Trigger| P{{"PLX Middleware"}}`);
+  if (trigger) {
+    const source = trigger.source;
+    const event = trigger.event_type;
+    lines.push(`  T[("${sourceLabels[source] || source}\\n${event}")] --> |Trigger| P{{"PLX Middleware"}}`);
+  } else {
+    lines.push('  T[("Kein Trigger")] --> |Trigger| P{{"PLX Middleware"}}');
+  }
 
   workflow.actions.forEach((action, index) => {
     const target = sourceLabels[action.target] || action.target;
@@ -79,8 +84,9 @@ export default function WorkflowCard({
   const [expanded, setExpanded] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const SourceIcon = sourceIcons[workflow.trigger.source] || FileText;
-  const mermaidDef = generateWorkflowMermaid(workflow);
+  const firstTrigger = workflow.triggers[0];
+  const SourceIcon = firstTrigger ? (sourceIcons[firstTrigger.source] || FileText) : FileText;
+  const mermaidDef = workflow.mermaid_definition || generateWorkflowMermaid(workflow);
 
   return (
     <div className="card overflow-hidden">
@@ -104,30 +110,32 @@ export default function WorkflowCard({
         </div>
 
         <div className="mt-4 flex items-center gap-2 text-xs text-gray-500">
-          <div className="flex items-center gap-1.5 rounded-md bg-gray-50 px-2.5 py-1.5">
-            <SourceIcon className="h-3.5 w-3.5" />
-            <span>{sourceLabels[workflow.trigger.source]}</span>
-          </div>
-          <ArrowRight className="h-3.5 w-3.5 text-gray-300" />
+          {firstTrigger && (
+            <div className="flex items-center gap-1.5 rounded-md bg-gray-50 px-2.5 py-1.5">
+              <SourceIcon className="h-3.5 w-3.5" />
+              <span>{sourceLabels[firstTrigger.source] || firstTrigger.source}</span>
+            </div>
+          )}
+          {workflow.actions.length > 0 && (
+            <ArrowRight className="h-3.5 w-3.5 text-gray-300" />
+          )}
           {workflow.actions.map((action, idx) => {
             const TargetIcon = sourceIcons[action.target] || FileText;
             return (
               <div key={action.id || idx} className="flex items-center gap-1.5 rounded-md bg-gray-50 px-2.5 py-1.5">
                 <TargetIcon className="h-3.5 w-3.5" />
-                <span>{sourceLabels[action.target]}</span>
+                <span>{sourceLabels[action.target] || action.target}</span>
               </div>
             );
           })}
         </div>
 
-        {workflow.last_execution && (
-          <div className="mt-3 flex items-center gap-1.5 text-xs text-gray-400">
-            <Clock className="h-3.5 w-3.5" />
-            <span>Letzte Ausf\u00fchrung: {formatTimestamp(workflow.last_execution)}</span>
-            <span className="text-gray-300">|</span>
-            <span>{workflow.execution_count} Ausf\u00fchrungen gesamt</span>
-          </div>
-        )}
+        <div className="mt-3 flex items-center gap-1.5 text-xs text-gray-400">
+          <Clock className="h-3.5 w-3.5" />
+          <span>Erstellt: {formatTimestamp(workflow.created_at)}</span>
+          <span className="text-gray-300">|</span>
+          <span>{workflow.triggers.length} Trigger, {workflow.actions.length} Aktionen</span>
+        </div>
 
         <div className="mt-4 flex items-center gap-2 border-t border-gray-100 pt-4">
           <button

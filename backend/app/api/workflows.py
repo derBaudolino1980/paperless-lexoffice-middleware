@@ -55,7 +55,7 @@ def _generate_mermaid(workflow: Workflow) -> str:
     return "\n".join(lines)
 
 
-@router.get("", response_model=PaginatedResponse[WorkflowListItem])
+@router.get("", response_model=PaginatedResponse[WorkflowRead])
 async def list_workflows(
     session: SessionDep,
     page: Annotated[int, Query(ge=1)] = 1,
@@ -75,23 +75,8 @@ async def list_workflows(
     result = await session.execute(stmt)
     workflows = result.scalars().all()
 
-    items = [
-        WorkflowListItem(
-            id=w.id,
-            name=w.name,
-            description=w.description,
-            mermaid_definition=w.mermaid_definition,
-            enabled=w.enabled,
-            created_at=w.created_at,
-            updated_at=w.updated_at,
-            trigger_count=len(w.triggers),
-            action_count=len(w.actions),
-        )
-        for w in workflows
-    ]
-
     return PaginatedResponse(
-        items=items,
+        items=[WorkflowRead.model_validate(w) for w in workflows],
         total=total,
         page=page,
         page_size=page_size,
@@ -195,6 +180,12 @@ async def update_workflow(session: SessionDep, workflow_id: uuid.UUID, payload: 
     await session.flush()
     await session.refresh(workflow)
     return workflow
+
+
+@router.patch("/{workflow_id}", response_model=WorkflowRead)
+async def patch_workflow(session: SessionDep, workflow_id: uuid.UUID, payload: WorkflowUpdate):
+    """Partial update – same logic as PUT, accepts any subset of fields."""
+    return await update_workflow(session, workflow_id, payload)
 
 
 @router.delete("/{workflow_id}", status_code=204)

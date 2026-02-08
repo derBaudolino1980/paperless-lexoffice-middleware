@@ -54,11 +54,11 @@ export default function Connections() {
         lastChecked: new Date().toISOString(),
       }));
     },
-    onError: () => {
+    onError: (err) => {
       setPaperless((prev) => ({
         ...prev,
-        status: 'connected',
-        message: 'Verbindung erfolgreich hergestellt (Demo-Modus)',
+        status: 'error',
+        message: `Verbindungsfehler: ${err instanceof Error ? err.message : 'Unbekannt'}`,
         lastChecked: new Date().toISOString(),
       }));
     },
@@ -80,11 +80,11 @@ export default function Connections() {
         lastChecked: new Date().toISOString(),
       }));
     },
-    onError: () => {
+    onError: (err) => {
       setLexoffice((prev) => ({
         ...prev,
-        status: 'connected',
-        message: 'Verbindung erfolgreich hergestellt (Demo-Modus)',
+        status: 'error',
+        message: `Verbindungsfehler: ${err instanceof Error ? err.message : 'Unbekannt'}`,
         lastChecked: new Date().toISOString(),
       }));
     },
@@ -92,39 +92,39 @@ export default function Connections() {
 
   const savePaperlessMutation = useMutation({
     mutationFn: () =>
-      api.put('/connections/paperless', {
+      api.put<{ success: boolean; message: string }>('/connections/paperless', {
         url: paperless.url,
         token: paperless.token,
       }),
-    onSuccess: () => {
+    onSuccess: (data) => {
       setPaperless((prev) => ({
         ...prev,
-        message: 'Konfiguration gespeichert',
+        message: data.message || 'Konfiguration gespeichert',
       }));
     },
-    onError: () => {
+    onError: (err) => {
       setPaperless((prev) => ({
         ...prev,
-        message: 'Konfiguration gespeichert (Demo-Modus)',
+        message: `Speicherfehler: ${err instanceof Error ? err.message : 'Unbekannt'}`,
       }));
     },
   });
 
   const saveLexofficeMutation = useMutation({
     mutationFn: () =>
-      api.put('/connections/lexoffice', {
+      api.put<{ success: boolean; message: string }>('/connections/lexoffice', {
         api_key: lexoffice.token,
       }),
-    onSuccess: () => {
+    onSuccess: (data) => {
       setLexoffice((prev) => ({
         ...prev,
-        message: 'Konfiguration gespeichert',
+        message: data.message || 'Konfiguration gespeichert',
       }));
     },
-    onError: () => {
+    onError: (err) => {
       setLexoffice((prev) => ({
         ...prev,
-        message: 'Konfiguration gespeichert (Demo-Modus)',
+        message: `Speicherfehler: ${err instanceof Error ? err.message : 'Unbekannt'}`,
       }));
     },
   });

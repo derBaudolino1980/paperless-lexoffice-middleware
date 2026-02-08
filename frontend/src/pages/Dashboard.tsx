@@ -10,7 +10,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { api } from '../api/client';
-import type { DashboardStats, WorkflowExecution } from '../api/client';
+import type { DashboardStats } from '../api/client';
 import MermaidViewer from '../components/MermaidViewer';
 
 const SYSTEM_ARCHITECTURE_DIAGRAM = `graph TB
@@ -55,62 +55,14 @@ const SYSTEM_ARCHITECTURE_DIAGRAM = `graph TB
 `;
 
 const mockStats: DashboardStats = {
-  active_workflows: 5,
   total_workflows: 8,
-  executions_today: 42,
-  success_rate: 97.6,
-  connected_systems: 2,
-  total_systems: 2,
+  active_workflows: 5,
+  total_executions: 42,
+  successful_executions: 40,
+  failed_executions: 2,
+  total_mappings: 12,
+  recent_logs: [],
 };
-
-const mockExecutions: WorkflowExecution[] = [
-  {
-    id: '1',
-    workflow_id: 'wf1',
-    workflow_name: 'Rechnungen zu Lexoffice',
-    status: 'success',
-    started_at: new Date(Date.now() - 5 * 60000).toISOString(),
-    finished_at: new Date(Date.now() - 4.8 * 60000).toISOString(),
-    duration_ms: 1230,
-  },
-  {
-    id: '2',
-    workflow_id: 'wf2',
-    workflow_name: 'Belege archivieren',
-    status: 'success',
-    started_at: new Date(Date.now() - 15 * 60000).toISOString(),
-    finished_at: new Date(Date.now() - 14.5 * 60000).toISOString(),
-    duration_ms: 890,
-  },
-  {
-    id: '3',
-    workflow_id: 'wf3',
-    workflow_name: 'Kontakte synchronisieren',
-    status: 'error',
-    started_at: new Date(Date.now() - 30 * 60000).toISOString(),
-    finished_at: new Date(Date.now() - 29.8 * 60000).toISOString(),
-    duration_ms: 4520,
-    error_message: 'Lexoffice API: Rate limit erreicht',
-  },
-  {
-    id: '4',
-    workflow_id: 'wf1',
-    workflow_name: 'Rechnungen zu Lexoffice',
-    status: 'success',
-    started_at: new Date(Date.now() - 60 * 60000).toISOString(),
-    finished_at: new Date(Date.now() - 59.5 * 60000).toISOString(),
-    duration_ms: 1100,
-  },
-  {
-    id: '5',
-    workflow_id: 'wf4',
-    workflow_name: 'Dokumenttyp-Erkennung',
-    status: 'skipped',
-    started_at: new Date(Date.now() - 90 * 60000).toISOString(),
-    finished_at: new Date(Date.now() - 90 * 60000).toISOString(),
-    duration_ms: 45,
-  },
-];
 
 function formatRelativeTime(ts: string): string {
   const diff = Date.now() - new Date(ts).getTime();
@@ -123,12 +75,7 @@ function formatRelativeTime(ts: string): string {
   return `Vor ${days} Tag${days > 1 ? 'en' : ''}`;
 }
 
-function formatDuration(ms: number): string {
-  if (ms < 1000) return `${ms}ms`;
-  return `${(ms / 1000).toFixed(1)}s`;
-}
-
-const statusConfig = {
+const statusConfig: Record<string, { label: string; class: string; icon: typeof CheckCircle2 }> = {
   success: { label: 'Erfolgreich', class: 'badge-success', icon: CheckCircle2 },
   error: { label: 'Fehler', class: 'badge-error', icon: AlertCircle },
   skipped: { label: 'Uebersprungen', class: 'badge-neutral', icon: ArrowRight },
@@ -138,18 +85,16 @@ const statusConfig = {
 export default function Dashboard() {
   const { data: stats } = useQuery<DashboardStats>({
     queryKey: ['dashboard-stats'],
-    queryFn: () => api.get('/stats'),
+    queryFn: () => api.get('/dashboard/stats'),
     placeholderData: mockStats,
   });
 
-  const { data: executions } = useQuery<WorkflowExecution[]>({
-    queryKey: ['recent-executions'],
-    queryFn: () => api.get('/executions/recent'),
-    placeholderData: mockExecutions,
-  });
-
   const displayStats = stats || mockStats;
-  const displayExecutions = executions || mockExecutions;
+
+  const successRate =
+    displayStats.total_executions > 0
+      ? Math.round((displayStats.successful_executions / displayStats.total_executions) * 1000) / 10
+      : 100;
 
   const statCards = [
     {
@@ -160,23 +105,23 @@ export default function Dashboard() {
       color: 'text-brand-600 bg-brand-50',
     },
     {
-      label: 'Ausf\u00fchrungen heute',
-      value: displayStats.executions_today,
-      subtitle: 'seit Mitternacht',
+      label: 'Ausf\u00fchrungen gesamt',
+      value: displayStats.total_executions,
+      subtitle: `${displayStats.failed_executions} fehlgeschlagen`,
       icon: Activity,
       color: 'text-blue-600 bg-blue-50',
     },
     {
       label: 'Erfolgsrate',
-      value: `${displayStats.success_rate}%`,
-      subtitle: 'letzte 24 Stunden',
+      value: `${successRate}%`,
+      subtitle: `${displayStats.successful_executions} erfolgreich`,
       icon: TrendingUp,
       color: 'text-emerald-600 bg-emerald-50',
     },
     {
-      label: 'Verbundene Systeme',
-      value: displayStats.connected_systems,
-      subtitle: `von ${displayStats.total_systems} konfiguriert`,
+      label: 'Kontakt-Mappings',
+      value: displayStats.total_mappings,
+      subtitle: 'Paperless \u2194 Lexoffice',
       icon: Link2,
       color: 'text-violet-600 bg-violet-50',
     },
@@ -214,42 +159,47 @@ export default function Dashboard() {
             <h2 className="text-sm font-semibold text-gray-900">Letzte Ausf\u00fchrungen</h2>
           </div>
           <div className="divide-y divide-gray-50">
-            {displayExecutions.map((exec) => {
-              const config = statusConfig[exec.status];
-              const StatusIcon = config.icon;
+            {displayStats.recent_logs.length === 0 ? (
+              <div className="px-5 py-8 text-center text-sm text-gray-400">
+                Noch keine Ausf\u00fchrungen vorhanden
+              </div>
+            ) : (
+              displayStats.recent_logs.map((log) => {
+                const config = statusConfig[log.status] || statusConfig.running;
+                const StatusIcon = config.icon;
 
-              return (
-                <div key={exec.id} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50/50">
-                  <StatusIcon
-                    className={`h-4 w-4 flex-shrink-0 ${
-                      exec.status === 'success'
-                        ? 'text-emerald-500'
-                        : exec.status === 'error'
-                        ? 'text-red-500'
-                        : 'text-gray-400'
-                    }`}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-gray-900">
-                      {exec.workflow_name}
-                    </p>
-                    {exec.error_message && (
-                      <p className="truncate text-xs text-red-500">{exec.error_message}</p>
-                    )}
+                return (
+                  <div key={log.id} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50/50">
+                    <StatusIcon
+                      className={`h-4 w-4 flex-shrink-0 ${
+                        log.status === 'success'
+                          ? 'text-emerald-500'
+                          : log.status === 'error'
+                          ? 'text-red-500'
+                          : 'text-gray-400'
+                      }`}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-gray-900">
+                        Workflow {log.workflow_id.slice(0, 8)}...
+                      </p>
+                      {log.error_message && (
+                        <p className="truncate text-xs text-red-500">{log.error_message}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-gray-400">
+                      {log.executed_at && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {formatRelativeTime(log.executed_at)}
+                        </span>
+                      )}
+                      <span className={config.class}>{config.label}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-gray-400">
-                    {exec.duration_ms !== undefined && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {formatDuration(exec.duration_ms)}
-                      </span>
-                    )}
-                    <span>{formatRelativeTime(exec.started_at)}</span>
-                    <span className={config.class}>{config.label}</span>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -292,7 +242,7 @@ export default function Dashboard() {
         <h2 className="mb-3 text-sm font-semibold text-gray-900">Systemarchitektur</h2>
         <MermaidViewer
           definition={SYSTEM_ARCHITECTURE_DIAGRAM}
-          title="Gesamtsystem\u00fcbersicht"
+          title="Gesamt\u00fcbersicht"
         />
       </div>
     </div>

@@ -85,60 +85,99 @@ export const api = {
   },
 };
 
-export interface Workflow {
-  id: string;
-  name: string;
-  description: string;
-  enabled: boolean;
-  trigger: WorkflowTrigger;
-  actions: WorkflowAction[];
-  created_at: string;
-  updated_at: string;
-  last_execution?: string;
-  execution_count: number;
+// ── Paginated response wrapper ─────────────────────────────────
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  page_size: number;
+  pages: number;
 }
 
+// ── Workflow types (match backend schemas) ──────────────────────
+
 export interface WorkflowTrigger {
+  id?: string;
+  workflow_id?: string;
   source: 'paperless' | 'lexoffice' | 'schedule';
   event_type: string;
-  conditions: Record<string, string>;
+  conditions?: Record<string, unknown>;
+  sort_order: number;
 }
 
 export interface WorkflowAction {
-  id: string;
+  id?: string;
+  workflow_id?: string;
   target: 'paperless' | 'lexoffice';
   action_type: string;
-  parameters: Record<string, string>;
-  order: number;
+  parameters?: Record<string, unknown>;
+  sort_order: number;
 }
 
-export interface WorkflowExecution {
+export interface Workflow {
+  id: string;
+  name: string;
+  description: string | null;
+  mermaid_definition: string | null;
+  enabled: boolean;
+  triggers: WorkflowTrigger[];
+  actions: WorkflowAction[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkflowListItem {
+  id: string;
+  name: string;
+  description: string | null;
+  mermaid_definition: string | null;
+  enabled: boolean;
+  trigger_count: number;
+  action_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// ── Log types (match backend WorkflowLogRead) ──────────────────
+
+export interface WorkflowLog {
   id: string;
   workflow_id: string;
-  workflow_name: string;
-  status: 'success' | 'error' | 'skipped' | 'running';
-  started_at: string;
-  finished_at?: string;
-  duration_ms?: number;
+  status: string;
   input_data?: Record<string, unknown>;
   output_data?: Record<string, unknown>;
-  error_message?: string;
+  error_message?: string | null;
+  executed_at: string;
 }
 
-export interface ConnectionConfig {
-  id: string;
-  type: 'paperless' | 'lexoffice';
-  name: string;
-  config: Record<string, string>;
-  status: 'connected' | 'disconnected' | 'error';
-  last_checked?: string;
-}
+// ── Dashboard types (match backend DashboardStats) ─────────────
 
 export interface DashboardStats {
-  active_workflows: number;
   total_workflows: number;
-  executions_today: number;
-  success_rate: number;
-  connected_systems: number;
-  total_systems: number;
+  active_workflows: number;
+  total_executions: number;
+  successful_executions: number;
+  failed_executions: number;
+  total_mappings: number;
+  recent_logs: {
+    id: string;
+    workflow_id: string;
+    status: string;
+    error_message?: string | null;
+    executed_at: string | null;
+  }[];
+}
+
+// ── Connection types ───────────────────────────────────────────
+
+export interface ConnectionTestResponse {
+  success: boolean;
+  message: string;
+  details?: Record<string, unknown>;
+}
+
+export interface ConnectionSaveResponse {
+  success: boolean;
+  message: string;
 }
