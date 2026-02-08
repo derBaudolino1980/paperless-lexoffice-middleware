@@ -105,7 +105,7 @@ export default function Dashboard() {
       color: 'text-brand-600 bg-brand-50',
     },
     {
-      label: 'Ausf\u00fchrungen gesamt',
+      label: 'Ausführungen gesamt',
       value: displayStats.total_executions,
       subtitle: `${displayStats.failed_executions} fehlgeschlagen`,
       icon: Activity,
@@ -121,7 +121,7 @@ export default function Dashboard() {
     {
       label: 'Kontakt-Mappings',
       value: displayStats.total_mappings,
-      subtitle: 'Paperless \u2194 Lexoffice',
+      subtitle: 'Paperless ↔ Lexoffice',
       icon: Link2,
       color: 'text-violet-600 bg-violet-50',
     },
@@ -132,7 +132,7 @@ export default function Dashboard() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
         <p className="mt-1 text-sm text-gray-500">
-          \u00dcbersicht \u00fcber Ihre Paperless-Lexoffice Integration
+          Übersicht über Ihre Paperless-Lexoffice Integration
         </p>
       </div>
 
@@ -156,12 +156,12 @@ export default function Dashboard() {
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="card">
           <div className="border-b border-gray-100 px-5 py-4">
-            <h2 className="text-sm font-semibold text-gray-900">Letzte Ausf\u00fchrungen</h2>
+            <h2 className="text-sm font-semibold text-gray-900">Letzte Ausführungen</h2>
           </div>
           <div className="divide-y divide-gray-50">
             {displayStats.recent_logs.length === 0 ? (
               <div className="px-5 py-8 text-center text-sm text-gray-400">
-                Noch keine Ausf\u00fchrungen vorhanden
+                Noch keine Ausführungen vorhanden
               </div>
             ) : (
               displayStats.recent_logs.map((log) => {
@@ -242,7 +242,7 @@ export default function Dashboard() {
         <h2 className="mb-3 text-sm font-semibold text-gray-900">Systemarchitektur</h2>
         <MermaidViewer
           definition={SYSTEM_ARCHITECTURE_DIAGRAM}
-          title="Gesamt\u00fcbersicht"
+          title="Gesamtübersicht"
         />
       </div>
     </div>

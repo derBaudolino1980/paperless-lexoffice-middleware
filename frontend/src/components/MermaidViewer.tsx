@@ -119,7 +119,7 @@ export default function MermaidViewer({ definition, className = '', title }: Mer
           <button
             onClick={() => setExpanded(!expanded)}
             className="rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600"
-            title={expanded ? 'Verkleinern' : 'Vergr\u00f6\u00dfern'}
+            title={expanded ? 'Verkleinern' : 'Vergrößern'}
           >
             {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </button>

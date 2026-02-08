@@ -51,9 +51,9 @@ const triggerEvents: Record<string, { label: string; events: { value: string; la
   schedule: {
     label: 'Zeitplan',
     events: [
-      { value: 'cron_daily', label: 'T\u00e4glich' },
-      { value: 'cron_hourly', label: 'St\u00fcndlich' },
-      { value: 'cron_weekly', label: 'W\u00f6chentlich' },
+      { value: 'cron_daily', label: 'Täglich' },
+      { value: 'cron_hourly', label: 'Stündlich' },
+      { value: 'cron_weekly', label: 'Wöchentlich' },
       { value: 'cron_custom', label: 'Benutzerdefiniert (Cron)' },
     ],
   },
@@ -65,7 +65,7 @@ const actionTypes: Record<string, { label: string; actions: { value: string; lab
     actions: [
       { value: 'create_document', label: 'Dokument erstellen', params: ['title', 'correspondent', 'document_type'] },
       { value: 'update_metadata', label: 'Metadaten aktualisieren', params: ['field', 'value'] },
-      { value: 'add_tag', label: 'Tag hinzuf\u00fcgen', params: ['tag_name'] },
+      { value: 'add_tag', label: 'Tag hinzufügen', params: ['tag_name'] },
       { value: 'assign_correspondent', label: 'Korrespondent zuweisen', params: ['correspondent_name'] },
     ],
   },
@@ -82,14 +82,14 @@ const actionTypes: Record<string, { label: string; actions: { value: string; lab
 
 const conditionFields: Record<string, { value: string; label: string }[]> = {
   paperless: [
-    { value: 'tag', label: 'Tag enth\u00e4lt' },
+    { value: 'tag', label: 'Tag enthält' },
     { value: 'document_type', label: 'Dokumenttyp ist' },
     { value: 'correspondent', label: 'Korrespondent ist' },
-    { value: 'title_contains', label: 'Titel enth\u00e4lt' },
+    { value: 'title_contains', label: 'Titel enthält' },
   ],
   lexoffice: [
-    { value: 'amount_gt', label: 'Betrag gr\u00f6\u00dfer als' },
-    { value: 'contact_name', label: 'Kontaktname enth\u00e4lt' },
+    { value: 'amount_gt', label: 'Betrag größer als' },
+    { value: 'contact_name', label: 'Kontaktname enthält' },
     { value: 'voucher_type', label: 'Belegtyp ist' },
   ],
   schedule: [],
@@ -288,7 +288,7 @@ export default function WorkflowDesigner({ initialData, onSave, onCancel }: Work
           <div className="card p-5">
             <h3 className="text-sm font-semibold text-gray-900">Trigger-Konfiguration</h3>
             <p className="mt-1 text-xs text-gray-500">
-              Wann soll dieser Workflow ausgel\u00f6st werden?
+              Wann soll dieser Workflow ausgelöst werden?
             </p>
 
             <div className="mt-4 space-y-4">
@@ -322,7 +322,7 @@ export default function WorkflowDesigner({ initialData, onSave, onCancel }: Work
                   onChange={(e) => updateTrigger({ event_type: e.target.value })}
                   required
                 >
-                  <option value="">Ereignis w\u00e4hlen...</option>
+                  <option value="">Ereignis wählen...</option>
                   {availableEvents.map((event) => (
                     <option key={event.value} value={event.value}>{event.label}</option>
                   ))}
@@ -354,7 +354,7 @@ export default function WorkflowDesigner({ initialData, onSave, onCancel }: Work
                       value={conditionKey}
                       onChange={(e) => setConditionKey(e.target.value)}
                     >
-                      <option value="">Feld w\u00e4hlen...</option>
+                      <option value="">Feld wählen...</option>
                       {availableConditions.map((c) => (
                         <option key={c.value} value={c.value}>{c.label}</option>
                       ))}
@@ -385,11 +385,11 @@ export default function WorkflowDesigner({ initialData, onSave, onCancel }: Work
               <div>
                 <h3 className="text-sm font-semibold text-gray-900">Aktionen</h3>
                 <p className="mt-1 text-xs text-gray-500">
-                  Was soll bei Ausl\u00f6sung passieren?
+                  Was soll bei Auslösung passieren?
                 </p>
               </div>
               <button type="button" onClick={addAction} className="btn-secondary text-xs">
-                <Plus className="h-4 w-4" /> Aktion hinzuf\u00fcgen
+                <Plus className="h-4 w-4" /> Aktion hinzufügen
               </button>
             </div>
 
@@ -397,7 +397,7 @@ export default function WorkflowDesigner({ initialData, onSave, onCancel }: Work
               {form.actions.length === 0 && (
                 <div className="rounded-lg border-2 border-dashed border-gray-200 p-6 text-center">
                   <p className="text-sm text-gray-400">
-                    Noch keine Aktionen definiert. F\u00fcgen Sie eine Aktion hinzu.
+                    Noch keine Aktionen definiert. Fügen Sie eine Aktion hinzu.
                   </p>
                 </div>
               )}
@@ -456,7 +456,7 @@ export default function WorkflowDesigner({ initialData, onSave, onCancel }: Work
                             updateAction(index, { action_type: e.target.value, parameters: {} })
                           }
                         >
-                          <option value="">Aktion w\u00e4hlen...</option>
+                          <option value="">Aktion wählen...</option>
                           {availableActions.map((a) => (
                             <option key={a.value} value={a.value}>{a.label}</option>
                           ))}
@@ -473,7 +473,7 @@ export default function WorkflowDesigner({ initialData, onSave, onCancel }: Work
                             <input
                               type="text"
                               className="input-field flex-1"
-                              placeholder={`Wert f\u00fcr ${param}`}
+                              placeholder={`Wert für ${param}`}
                               value={action.parameters[param] || ''}
                               onChange={(e) => updateActionParam(index, param, e.target.value)}
                             />

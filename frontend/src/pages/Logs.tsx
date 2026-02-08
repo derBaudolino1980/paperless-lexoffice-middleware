@@ -39,14 +39,14 @@ const statusConfig: Record<string, {
     badgeClass: 'badge-error',
   },
   skipped: {
-    label: '\u00dcbersprungen',
+    label: 'Übersprungen',
     icon: SkipForward,
     rowClass: 'hover:bg-gray-50',
     iconClass: 'text-gray-400',
     badgeClass: 'badge-neutral',
   },
   running: {
-    label: 'L\u00e4uft',
+    label: 'Läuft',
     icon: Loader2,
     rowClass: 'hover:bg-blue-50/50',
     iconClass: 'text-blue-500 animate-spin',
@@ -106,7 +106,7 @@ export default function Logs() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Protokolle</h1>
           <p className="mt-1 text-sm text-gray-500">
-            \u00dcbersicht aller Workflow-Ausf\u00fchrungen und deren Ergebnisse
+            Übersicht aller Workflow-Ausführungen und deren Ergebnisse
           </p>
         </div>
         <button
@@ -138,7 +138,7 @@ export default function Logs() {
           <SkipForward className="h-5 w-5 text-gray-400" />
           <div>
             <p className="text-lg font-bold text-gray-700">{skippedCount}</p>
-            <p className="text-xs text-gray-500">\u00dcbersprungen</p>
+            <p className="text-xs text-gray-500">Übersprungen</p>
           </div>
         </div>
       </div>
@@ -162,7 +162,7 @@ export default function Logs() {
               ['all', 'Alle'],
               ['success', 'Erfolg'],
               ['error', 'Fehler'],
-              ['skipped', '\u00dcberspr.'],
+              ['skipped', 'Überspr.'],
             ] as [StatusFilterType, string][]).map(([value, label]) => (
               <button
                 key={value}
@@ -208,8 +208,8 @@ export default function Logs() {
                   <td colSpan={4} className="px-5 py-12 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <Search className="h-8 w-8 text-gray-300" />
-                      <p className="text-sm font-medium text-gray-500">Keine Protokolleintr\u00e4ge gefunden</p>
-                      <p className="text-xs text-gray-400">Passen Sie die Filter an oder warten Sie auf neue Ausf\u00fchrungen.</p>
+                      <p className="text-sm font-medium text-gray-500">Keine Protokolleinträge gefunden</p>
+                      <p className="text-xs text-gray-400">Passen Sie die Filter an oder warten Sie auf neue Ausführungen.</p>
                     </div>
                   </td>
                 </tr>

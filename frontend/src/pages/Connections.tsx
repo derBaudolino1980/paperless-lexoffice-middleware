@@ -212,7 +212,7 @@ export default function Connections() {
                 onChange={(e) => setPaperless((prev) => ({ ...prev, url: e.target.value }))}
               />
               <p className="mt-1 text-xs text-gray-400">
-                Die vollst\u00e4ndige URL Ihrer Paperless-ngx Installation
+                Die vollständige URL Ihrer Paperless-ngx Installation
               </p>
             </div>
 
@@ -303,7 +303,7 @@ export default function Connections() {
           <div className="p-5 space-y-4">
             <div>
               <label htmlFor="lexoffice-key" className="block text-sm font-medium text-gray-700">
-                API-Schl\u00fcssel
+                API-Schlüssel
               </label>
               <div className="relative mt-1">
                 <Shield className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -311,20 +311,20 @@ export default function Connections() {
                   id="lexoffice-key"
                   type="password"
                   className="input-field pl-9"
-                  placeholder="API-Schl\u00fcssel eingeben..."
+                  placeholder="API-Schlüssel eingeben..."
                   value={lexoffice.token}
                   onChange={(e) => setLexoffice((prev) => ({ ...prev, token: e.target.value }))}
                 />
               </div>
               <p className="mt-1 text-xs text-gray-400">
-                Den API-Schl\u00fcssel finden Sie im Lexoffice Developer Portal unter Ihrem Profil
+                Den API-Schlüssel finden Sie im Lexoffice Developer Portal unter Ihrem Profil
               </p>
             </div>
 
             <div className="rounded-lg bg-blue-50 px-4 py-3">
               <p className="text-xs text-blue-700">
-                <strong>Hinweis:</strong> Der Lexoffice API-Schl\u00fcssel hat eingeschr\u00e4nkte Berechtigungen.
-                Stellen Sie sicher, dass die ben\u00f6tigten Scopes (Rechnungen, Belege, Kontakte) aktiviert sind.
+                <strong>Hinweis:</strong> Der Lexoffice API-Schlüssel hat eingeschränkte Berechtigungen.
+                Stellen Sie sicher, dass die benötigten Scopes (Rechnungen, Belege, Kontakte) aktiviert sind.
               </p>
             </div>
 
@@ -388,7 +388,7 @@ export default function Connections() {
             </div>
             <h4 className="mt-3 text-sm font-medium text-gray-900">API-Zugang erstellen</h4>
             <p className="mt-1 text-xs text-gray-500">
-              Erstellen Sie API-Token bzw. API-Schl\u00fcssel in den jeweiligen Systemen.
+              Erstellen Sie API-Token bzw. API-Schlüssel in den jeweiligen Systemen.
             </p>
           </div>
           <div className="rounded-lg bg-gray-50 p-4">

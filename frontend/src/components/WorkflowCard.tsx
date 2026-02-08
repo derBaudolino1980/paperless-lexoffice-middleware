@@ -153,9 +153,9 @@ export default function WorkflowCard({
           <button
             onClick={() => onExecute(workflow.id)}
             className="btn-ghost text-xs"
-            title="Jetzt ausf\u00fchren"
+            title="Jetzt ausführen"
           >
-            <Zap className="h-3.5 w-3.5" /> Ausf\u00fchren
+            <Zap className="h-3.5 w-3.5" /> Ausführen
           </button>
 
           <button
@@ -176,7 +176,7 @@ export default function WorkflowCard({
                 }}
                 className="btn-danger !py-1.5 !px-2.5 text-xs"
               >
-                Ja, l\u00f6schen
+                Ja, löschen
               </button>
               <button
                 onClick={() => setConfirmDelete(false)}
@@ -189,7 +189,7 @@ export default function WorkflowCard({
             <button
               onClick={() => setConfirmDelete(true)}
               className="btn-ghost ml-auto text-xs text-red-500 hover:text-red-700"
-              title="L\u00f6schen"
+              title="Löschen"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
